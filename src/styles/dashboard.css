@@ -1,0 +1,293 @@
+/*
+╔══════════════════════════════════════════════════
+║  OmniSensus · dashboard.css
+║  Shared grid layouts · Admin · Doctor · Patient
+╚══════════════════════════════════════════════════
+*/
+
+/* ══════════════════════════════════════
+   BASE DASHBOARD SHELL
+══════════════════════════════════════ */
+.dashboard-root {
+  display: grid;
+  grid-template-rows: var(--nav-h) 1fr;
+  min-height: 100vh;
+  background: var(--bg);
+}
+.dashboard-body {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  overflow: hidden;
+}
+.dashboard-main {
+  overflow-y: auto;
+  height: calc(100vh - var(--nav-h));
+  padding: 22px 24px 80px;
+}
+
+/* ══════════════════════════════════════
+   KPI STRIP — all roles
+══════════════════════════════════════ */
+.kpi-strip {
+  display: grid;
+  gap: 13px;
+  margin-bottom: 20px;
+}
+.kpi-strip--4  { grid-template-columns: repeat(4, 1fr); }
+.kpi-strip--5  { grid-template-columns: repeat(5, 1fr); }
+.kpi-strip--3  { grid-template-columns: repeat(3, 1fr); }
+.kpi-strip--2  { grid-template-columns: repeat(2, 1fr); }
+
+.kpi-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 16px 18px;
+  box-shadow: var(--shadow-xs); display: flex; flex-direction: column; gap: 4px;
+  transition: box-shadow .15s;
+}
+.kpi-card:hover { box-shadow: var(--shadow-sm); }
+.kpi-card--teal   { border-left: 4px solid var(--teal);    }
+.kpi-card--danger { border-left: 4px solid var(--danger);  }
+.kpi-card--warn   { border-left: 4px solid var(--warning); }
+.kpi-card--blue   { border-left: 4px solid var(--info);    }
+.kpi-card--green  { border-left: 4px solid var(--success); }
+
+.kpi-card__icon-row {
+  display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px;
+}
+.kpi-card__ico {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+.kpi-card__delta {
+  font-size: 10.5px; font-weight: 700; display: flex; align-items: center; gap: 3px;
+  padding: 3px 7px; border-radius: 99px;
+}
+.kpi-card__delta--up   { background: var(--success-bg); color: var(--success); }
+.kpi-card__delta--down { background: var(--danger-bg);  color: var(--danger);  }
+.kpi-card__delta--flat { background: var(--bg);         color: var(--text-400);}
+
+.kpi-card__value { font-size: 26px; font-weight: 800; color: var(--text-900); letter-spacing: -1px; line-height: 1; }
+.kpi-card__label { font-size: 11px; font-weight: 700; color: var(--text-400); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+.kpi-card__sub   { font-size: 11px; color: var(--text-400); margin-top: 2px; }
+
+/* ══════════════════════════════════════
+   ADMIN DASHBOARD GRID
+══════════════════════════════════════ */
+.admin-grid-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.admin-grid-wide {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.admin-grid-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.admin-triage-strip {
+  display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+}
+
+/* Resource allocation grid */
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.resource-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 18px; box-shadow: var(--shadow-xs);
+  transition: all .15s;
+}
+.resource-card:hover { border-color: var(--teal-200); box-shadow: var(--shadow-sm); }
+.resource-card__header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+}
+.resource-card__title  { font-size: 13px; font-weight: 700; color: var(--text-900); display: flex; align-items: center; gap: 8px; }
+.resource-card__badge  { }
+.resource-card__value  { font-size: 32px; font-weight: 800; color: var(--text-900); letter-spacing: -1px; line-height: 1; }
+.resource-card__of     { font-size: 14px; font-weight: 500; color: var(--text-400); }
+.resource-card__bar-bg { height: 6px; background: var(--bg); border-radius: 99px; border: 1px solid var(--border); margin: 10px 0; }
+.resource-card__bar-fill { height: 6px; border-radius: 99px; transition: width .4s ease; }
+.resource-card__sub    { font-size: 11px; color: var(--text-500); }
+
+/* Staff on-call table */
+.oncall-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.oncall-table th {
+  text-align: left; padding: 8px 12px; font-size: 10px; font-weight: 700;
+  color: var(--text-400); text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 2px solid var(--border); background: var(--bg);
+}
+.oncall-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-l); vertical-align: middle; }
+.oncall-table tr:last-child td { border-bottom: none; }
+.oncall-table tr:hover td { background: var(--bg); }
+.oncall-name { font-weight: 600; color: var(--text-900); }
+.oncall-dept { font-size: 11px; color: var(--text-400); margin-top: 1px; }
+
+/* Bed heat-map */
+.bed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+}
+.bed-cell {
+  min-height: 38px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: .2px;
+  line-height: 1;
+  border: 1px solid transparent;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.bed-cell:hover { transform: translateY(-1px); box-shadow: var(--shadow-xs); }
+.bed-cell--occupied { background: #DC2626; color: #fff; }
+.bed-cell--free     { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
+.bed-cell--reserved { background: #FDE68A; color: #92400E; border: 1px solid #F59E0B; }
+.bed-cell--icu      { background: #7C3AED; color: #fff; }
+.bed-legend {
+  display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap;
+}
+.bed-legend__item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-500); }
+.bed-legend__dot  { width: 12px; height: 12px; border-radius: 4px; }
+
+/* ══════════════════════════════════════
+   DOCTOR DASHBOARD GRID
+══════════════════════════════════════ */
+.doctor-grid-hero {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.doctor-grid-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.doctor-grid-lab {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+}
+
+/* Longitudinal timeline */
+.timeline-rail {
+  position: relative;
+  padding-left: 28px;
+}
+.timeline-rail::before {
+  content: '';
+  position: absolute; left: 9px; top: 12px; bottom: 12px;
+  width: 2px; background: var(--border);
+}
+.tl-event {
+  position: relative; margin-bottom: 22px;
+}
+.tl-event:last-child { margin-bottom: 0; }
+.tl-event__dot {
+  position: absolute; left: -22px; top: 12px;
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--white); z-index: 1;
+}
+.tl-event__card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 14px 16px; box-shadow: var(--shadow-xs);
+  transition: all .15s;
+}
+.tl-event__card:hover { border-color: var(--teal-200); box-shadow: var(--shadow-sm); }
+.tl-event__date  { font-size: 10.5px; color: var(--text-400); font-family: monospace; margin-bottom: 5px; }
+.tl-event__title { font-size: 13px; font-weight: 700; color: var(--text-900); margin-bottom: 6px; }
+.tl-event__metrics {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px;
+}
+.tl-metric { background: var(--bg); border-radius: var(--r); padding: 7px 9px; }
+.tl-metric__label { font-size: 9px; font-weight: 700; color: var(--text-400); text-transform: uppercase; }
+.tl-metric__value { font-size: 14px; font-weight: 800; color: var(--text-900); margin-top: 1px; }
+
+/* Score line (patient history chart container) */
+.history-chart-wrap {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 18px; box-shadow: var(--shadow-xs);
+  margin-bottom: 16px;
+}
+.history-chart-wrap__header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.history-chart-wrap__title { font-size: 13px; font-weight: 700; color: var(--text-900); }
+
+/* ══════════════════════════════════════
+   PATIENT DASHBOARD GRID
+══════════════════════════════════════ */
+.patient-grid-overview {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.patient-grid-insights {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+}
+.patient-grid-meds {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+}
+
+/* Report detail layout */
+.report-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+}
+.report-detail-main { }
+.report-detail-sidebar {
+  display: flex; flex-direction: column; gap: 14px;
+  position: sticky; top: calc(var(--nav-h) + 22px);
+  align-self: start;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════════ */
+@media (max-width: 1200px) {
+  .admin-grid-charts   { grid-template-columns: 1fr 1fr; }
+  .resource-grid       { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 1024px) {
+  .admin-grid-main     { grid-template-columns: 1fr; }
+  .admin-grid-wide     { grid-template-columns: 1fr; }
+  .doctor-grid-hero    { grid-template-columns: 1fr; }
+  .doctor-grid-main    { grid-template-columns: 1fr; }
+  .doctor-grid-lab     { grid-template-columns: 1fr; }
+  .patient-grid-overview  { grid-template-columns: 1fr; }
+  .patient-grid-insights  { grid-template-columns: 1fr; }
+  .patient-grid-meds      { grid-template-columns: 1fr; }
+  .report-detail-layout   { grid-template-columns: 1fr; }
+  .kpi-strip--5        { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .dashboard-main      { padding: 14px 14px 80px; }
+  .kpi-strip--4        { grid-template-columns: 1fr 1fr; }
+  .kpi-strip--3        { grid-template-columns: 1fr 1fr; }
+  .resource-grid       { grid-template-columns: 1fr; }
+  .admin-grid-charts   { grid-template-columns: 1fr; }
+  .bed-grid            { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); }
+  .bed-cell            { min-height: 34px; font-size: 11px; }
+  .tl-event__metrics   { grid-template-columns: 1fr 1fr; }
+}

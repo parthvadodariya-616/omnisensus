@@ -1,0 +1,201 @@
+/*
+  OmniSensus · vars-alias.css
+  Bridges legacy variable names used in JSX → design token system.
+  Import this AFTER common.css in layout.js.
+*/
+:root {
+  /* Legacy aliases → real tokens */
+  --grey-border:  var(--border);
+  --grey-bg:      var(--bg);
+  --grey-text:    var(--text-500);
+  --dark:         var(--text-900);
+  --dark-mid:     var(--text-700);
+  --teal-mid:     var(--teal-200);
+  --teal-light:   var(--teal-100);
+  --mono:         'JetBrains Mono', 'Fira Mono', 'Menlo', monospace;
+  --info-color:   var(--info);
+
+  /* Badge aliases used in patient notifications */
+  --b-danger-bg:   var(--danger-bg);
+  --b-warning-bg:  var(--warning-bg);
+  --b-teal-bg:     var(--teal-100);
+  --b-neutral-bg:  var(--bg);
+}
+
+/* Badge class aliases */
+.b-danger  { background: var(--danger-bg);  color: var(--danger);  }
+.b-warning { background: var(--warning-bg); color: var(--warning); }
+.b-teal    { background: var(--teal-100);   color: var(--teal);    }
+.b-neutral { background: var(--bg);         color: var(--text-500);}
+
+/* Trend class aliases */
+.trend-up   { color: var(--danger);  }
+.trend-neu  { color: var(--text-400);}
+.trend-down { color: var(--success); }
+
+/* Smooth transitions globally */
+*, *::before, *::after {
+  transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+/* Better scroll performance */
+.dashboard-main,
+.page-wrap,
+.page-inner,
+.wrap {
+  will-change: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Skeleton shimmer for loading states */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--bg) 25%, var(--border) 50%, var(--bg) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--r);
+}
+
+/* Remove all blinking / pulsing status dots from layout */
+.status-dot,
+.live-pill__dot,
+.hero-pulse,
+.hero-eyebrow-dot,
+.nav-icon-btn__dot {
+  display: none !important;
+}
+
+/* Smooth page transitions */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-wrap,
+.page-inner,
+.wrap {
+  animation: pageIn 0.22s ease both;
+}
+
+.route-shell {
+  min-height: 100%;
+  animation: pageIn 0.22s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-wrap,
+  .page-inner,
+  .wrap,
+  .route-shell {
+    animation: none !important;
+  }
+}
+
+/* Pill filter buttons consistent styling */
+.filter-pill {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all .15s;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--text-500);
+}
+.filter-pill:hover  { border-color: var(--teal-200); color: var(--teal); }
+.filter-pill.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+/* Input consistent style */
+.input-std {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text-900);
+  font-family: var(--font);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.input-std:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(16,132,126,.1);
+}
+
+/* Loading spinner helper */
+.spin-sm {
+  width: 28px; height: 28px;
+  border: 2.5px solid var(--teal-200);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+/* Full page centered loader */
+.page-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 52vh;
+  gap: 14px;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+.page-loader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.page-loader__text {
+  font-size: 13px;
+  color: var(--text-400);
+  font-weight: 500;
+}
+
+.route-loader {
+  min-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.route-loader__circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 4px solid rgba(16, 132, 126, .22);
+  border-top-color: var(--teal);
+  animation: spin .75s linear infinite;
+  box-shadow: 0 0 0 5px rgba(16, 132, 126, .08);
+}
+
+.route-loader__text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-700);
+  letter-spacing: .2px;
+}
+
+.btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-submit__spin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .45);
+  border-top-color: #fff;
+  animation: spin .65s linear infinite;
+}

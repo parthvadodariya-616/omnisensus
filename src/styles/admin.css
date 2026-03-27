@@ -1,0 +1,98 @@
+/*
+╔══════════════════════════════════════════════════════════════╗
+║  OmniSensus Medical · admin.css                            ║
+║  Phase II — Administrative Command Centre Styles            ║
+╚══════════════════════════════════════════════════════════════╝
+*/
+
+/* ── TRIAGE TABLE SPECIFICS ── */
+.risk-mini-bar  { width: 48px; height: 4px; background: var(--border); border-radius: 9px; overflow: hidden; }
+.risk-mini-fill { height: 100%; border-radius: 9px; }
+.risk-mini-fill--crit { background: var(--danger);  }
+.risk-mini-fill--elev { background: var(--warning); }
+.risk-mini-fill--stab { background: var(--success); }
+.risk-chip { display: flex; align-items: center; gap: 5px; }
+
+/* ── KPI STRIP ── */
+.admin-kpi-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
+
+/* ── CHARTS GRID ── */
+.charts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+
+/* ── ACCURACY GRID ── */
+.acc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 22px; }
+.acc-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 18px;
+  box-shadow: var(--shadow-xs); text-align: center;
+}
+.acc-card__val { font-size: 32px; font-weight: 800; color: var(--teal); letter-spacing: -1px; }
+.acc-card__lbl { font-size: 11px; color: var(--text-500); font-weight: 500; margin-top: 4px; }
+.acc-card__sub { font-size: 10px; color: var(--text-400); margin-top: 2px; }
+
+/* ── AUDIT LOG ── */
+.audit-wrap {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-xs); overflow: hidden;
+}
+.audit-head {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.audit-head h3 {
+  font-size: 14px; font-weight: 700; color: var(--text-900);
+  display: flex; align-items: center; gap: 8px;
+}
+.audit-body { max-height: 340px; overflow-y: auto; }
+.audit-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 20px; border-bottom: 1px solid var(--border-l);
+  transition: background .12s;
+}
+.audit-row:last-child { border-bottom: none; }
+.audit-row:hover { background: var(--bg); }
+.audit-time {
+  font-size: 10.5px; color: var(--text-400); font-weight: 500;
+  white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+  font-family: monospace;
+}
+.audit-icon {
+  width: 22px; height: 22px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.audit-icon--info    { background: var(--info-bg);    color: var(--info);    }
+.audit-icon--warn    { background: var(--warning-bg); color: var(--warning); }
+.audit-icon--danger  { background: var(--danger-bg);  color: var(--danger);  }
+.audit-icon--success { background: var(--success-bg); color: var(--success); }
+.audit-msg  { font-size: 12px; color: var(--text-700); line-height: 1.5; }
+.audit-msg strong { color: var(--text-900); font-weight: 600; }
+.audit-tag {
+  font-size: 10px; font-weight: 700;
+  padding: 1px 7px; border-radius: 99px; margin-left: 6px;
+}
+.audit-tag--sec  { background: var(--info-bg);    color: var(--info);    }
+.audit-tag--db   { background: var(--teal-100);   color: var(--teal);    }
+.audit-tag--auth { background: var(--warning-bg); color: var(--warning); }
+.audit-tag--ai   { background: var(--success-bg); color: var(--success); }
+
+/* ── USER REGISTRY TABLE ── */
+.user-tbl-wrap { margin-bottom: 22px; }
+
+/* ── LIVE INDICATOR PILL ── */
+.live-pill {
+  padding: 4px 12px;
+  background: var(--danger-bg); border: 1px solid #FCA5A5;
+  border-radius: 99px; font-size: 11px; font-weight: 700; color: var(--danger);
+  display: flex; align-items: center; gap: 5px;
+}
+.live-pill__dot {
+  width: 6px; height: 6px; background: var(--danger);
+  border-radius: 50%; animation: blink 1.2s infinite;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 920px) {
+  .admin-kpi-strip   { grid-template-columns: 1fr 1fr; }
+  .charts-grid-2     { grid-template-columns: 1fr; }
+  .acc-grid          { grid-template-columns: 1fr 1fr; }
+}

@@ -1,0 +1,12 @@
+/* src/app/globals.css — Base resets only. Full CSS loaded from src/styles in root layout. */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { -webkit-font-smoothing: antialiased; }
+a { text-decoration: none; color: inherit; }
+
+/* Shared keyframes (referenced across style layers) */
+@keyframes spin         { to { transform: rotate(360deg); } }
+@keyframes toastIn      { from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:none; } }
+@keyframes typingBounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-5px);} }
+@keyframes fadeUp       { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:none;} }
+@keyframes modalIn      { from{opacity:0;transform:translateY(10px) scale(.98);} to{opacity:1;transform:none;} }

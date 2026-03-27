@@ -1,0 +1,343 @@
+/* Shared compatibility classes for current JSX across roles */
+
+.page-inner,
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 26px 22px 56px;
+}
+
+.sh {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.f-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-700);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.f-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  font-size: 13px;
+  color: var(--text-900);
+  background: var(--bg);
+}
+
+.nav-menu-btn {
+  width: 34px;
+  height: 34px;
+  display: none;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-700);
+}
+
+.stat-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-500);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-card-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-900);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.stat-card-val span {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-400);
+  margin-left: 2px;
+}
+
+.stat-trend {
+  font-size: 11px;
+  color: var(--text-400);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 18px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.report-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--teal-100);
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+.report-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.report-info h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-900);
+}
+
+.report-info p {
+  font-size: 11px;
+  color: var(--text-400);
+  margin-top: 2px;
+}
+
+.report-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-sm-teal,
+.btn-sm-outline {
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-sm-teal {
+  background: var(--teal);
+  color: #fff;
+  border: 1px solid var(--teal);
+}
+
+.btn-sm-outline {
+  background: #fff;
+  color: var(--text-700);
+  border: 1.5px solid var(--border);
+}
+
+.btn-sm-teal:disabled,
+.btn-sm-outline:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.pdf-frame-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 460px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f8fbfe, #f0f6fb);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.6);
+}
+
+.pdf-frame {
+  width: 100%;
+  height: 460px;
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
+.pdf-frame-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(243,247,251,.96));
+  color: var(--text-500);
+  font-size: 12px;
+}
+
+.pdf-modal-subhead {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-500);
+  line-height: 1.5;
+}
+
+.pdf-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 860px) {
+  .pdf-frame-wrap {
+    min-height: 370px;
+  }
+
+  .pdf-frame {
+    height: 370px;
+  }
+}
+
+.badge-grey {
+  background: var(--bg);
+  color: var(--text-500);
+}
+
+.chart-container {
+  position: relative;
+  height: 200px;
+}
+
+.chart-container-sm {
+  position: relative;
+  height: 165px;
+}
+
+.bio-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bio-table thead tr {
+  border-bottom: 1.5px solid var(--border);
+}
+
+.bio-table th {
+  text-align: left;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-400);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.bio-table td {
+  padding: 9px 10px;
+  font-size: 12px;
+  color: var(--text-700);
+  border-bottom: 1px solid var(--bg);
+}
+
+.lab-icon-teal { background: var(--teal-100); color: var(--teal); }
+.lab-icon-warn { background: var(--warning-bg); color: var(--warning); }
+.lab-icon-danger { background: var(--danger-bg); color: var(--danger); }
+.lab-icon-grey { background: var(--bg); color: var(--text-500); }
+
+.support-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
+  align-items: start;
+}
+
+.reminder-card,
+.tip-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-xs);
+}
+
+.med-icon {
+  width: 30px;
+  height: 30px;
+  background: var(--teal-100);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+.med-info { flex: 1; min-width: 0; }
+.med-name { font-size: 12px; font-weight: 700; color: var(--text-900); }
+.med-time { font-size: 11px; color: var(--text-400); margin-top: 1px; }
+.med-due { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--warning-bg); color: var(--warning); }
+
+.tip-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+
+.tip-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border: 1.5px solid var(--teal);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.text-sm { font-size: 11px; }
+
+.toast-info .toast-icon { color: var(--teal); }
+.toast-icon { display: flex; align-items: center; justify-content: center; }
+.toast-body h5 { font-size: 13px; font-weight: 700; color: var(--text-900); margin-bottom: 2px; }
+.toast-body p { font-size: 12px; color: var(--text-500); }
+
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 920px) {
+  .support-grid { grid-template-columns: 1fr; }
+  .page-inner,
+  .wrap { padding: 22px 16px 40px; }
+  .nav-menu-btn { display: grid; }
+}

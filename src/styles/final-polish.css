@@ -1,0 +1,189 @@
+/* Final visual polish layer for all role pages */
+
+:root {
+  --surface: #ffffff;
+  --surface-soft: #f7fbff;
+  --ring: 0 0 0 3px rgba(16,132,126,.10);
+}
+
+body {
+  background-image:
+    radial-gradient(circle at 12% 0%, rgba(16,132,126,.08) 0, rgba(16,132,126,0) 34%),
+    radial-gradient(circle at 100% 0%, rgba(37,99,235,.06) 0, rgba(37,99,235,0) 36%);
+}
+
+.page-wrap,
+.page-inner,
+.wrap {
+  animation: fadeUp .22s ease;
+}
+
+.section-head h2,
+.sh h2 {
+  font-size: 22px;
+  letter-spacing: -.25px;
+}
+
+.section-head p,
+.sh p {
+  color: var(--text-500);
+}
+
+.card,
+.table-wrap,
+.chart-card,
+.trend-card,
+.status-card,
+.wizard-card,
+.report-item,
+.reminder-card,
+.tip-card {
+  border-color: var(--border);
+  box-shadow: 0 8px 28px rgba(17,24,39,.06);
+}
+
+.card:hover,
+.table-wrap:hover,
+.report-item:hover,
+.status-card:hover,
+.wizard-card:hover {
+  box-shadow: 0 12px 34px rgba(17,24,39,.09);
+}
+
+/* Hero */
+.hero-scan,
+.scan-hero {
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 14px 34px rgba(16,132,126,.24);
+}
+
+.hero-input-bar,
+.hero-search-bar {
+  border-width: 1px;
+}
+
+.hero-scan-btn,
+.hero-search-btn {
+  box-shadow: 0 6px 14px rgba(16,132,126,.20);
+}
+
+/* KPI and stat cards */
+.kpi,
+.stat-card,
+.kpi-card {
+  background: linear-gradient(180deg, #fff 0%, #fcfeff 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.stat-card {
+  padding: 16px 18px;
+}
+
+.stat-card-val,
+.kpi-val,
+.kpi-card__value {
+  margin-top: 6px;
+}
+
+/* Form controls */
+.f-input,
+.field-input,
+.wiz-input,
+.auth-field__input,
+.chat-input {
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.f-input:focus,
+.field-input:focus,
+.wiz-input:focus,
+.auth-field__input:focus,
+.chat-input:focus {
+  border-color: var(--teal);
+  box-shadow: var(--ring);
+  background: #fff;
+}
+
+/* Table */
+.tbl th {
+  font-size: 10.5px;
+}
+
+.tbl td {
+  font-size: 12.25px;
+}
+
+/* Chips and badges */
+.badge,
+.hero-chip,
+.quick-pill {
+  border: 1px solid transparent;
+}
+
+.hero-chip:hover,
+.quick-pill:hover {
+  transform: translateY(-1px);
+}
+
+/* Toast */
+.toast {
+  border-radius: 12px;
+  min-width: 280px;
+}
+
+/* Report rows */
+.report-item {
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+
+.report-item:hover {
+  transform: translateY(-1px);
+}
+
+/* Auth page polish */
+.auth-shell {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+}
+
+.auth-box {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 14px 30px rgba(17,24,39,.08);
+  padding: 24px;
+}
+
+/* Responsiveness */
+@media (max-width: 1100px) {
+  .stat-row,
+  .kpi-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .stat-row,
+  .kpi-strip,
+  .wizard-grid,
+  .lab-grid,
+  .support-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-scan,
+  .scan-hero {
+    padding: 18px;
+  }
+
+  .hero-input-bar,
+  .hero-search-bar {
+    flex-wrap: wrap;
+  }
+
+  .hero-scan-btn,
+  .hero-search-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
