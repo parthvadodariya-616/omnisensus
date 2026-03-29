@@ -73,17 +73,15 @@
 /* ══════════════════════════════════════════════════
    [2] RESET & BASE
 ══════════════════════════════════════════════════ */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-html { font-size: 14px; -webkit-text-size-adjust: 100%; }
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text-700);
-  -webkit-font-smoothing: antialiased;
+/* Scroll isolation — only #main scrolls, nav/chat stay fixed */
+html, body { height: 100%; overflow: hidden; }
+
+#main {
+  margin-left: var(--side-w);
+  padding-top: var(--nav-h);
+  height: 100vh;
+  overflow-y: auto;     /* ← only this scrolls */
+  overflow-x: hidden;
 }
 button { cursor: pointer; border: none; font-family: var(--font); outline: none; }
 input, select, textarea { font-family: var(--font); outline: none; }
@@ -312,7 +310,9 @@ a { text-decoration: none; }
 #main {
   margin-left: var(--side-w);
   padding-top: var(--nav-h);
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;     /* ← only this scrolls */
+  overflow-x: hidden;
 }
 
 .page-view { display: none; }
@@ -593,7 +593,7 @@ input[type=range]::-webkit-slider-thumb {
   background: var(--teal); border-radius: 50%; border: none;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  z-index: 800;
+  z-index: 1100;
   box-shadow: 0 4px 16px rgba(16,132,126,.35);
   transition: background .15s, transform .12s;
 }
@@ -614,7 +614,7 @@ input[type=range]::-webkit-slider-thumb {
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: var(--shadow-lg);
-  z-index: 800;
+  z-index: 1100;
   display: none; flex-direction: column; overflow: hidden;
   animation: chatOpen .2s ease;
 }

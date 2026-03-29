@@ -34,9 +34,9 @@
 .trend-down { color: var(--success); }
 
 /* Smooth transitions globally */
-*, *::before, *::after {
+/* *, *::before, *::after {
   transition-timing-function: cubic-bezier(.4, 0, .2, 1);
-}
+} */
 
 /* Better scroll performance */
 .dashboard-main,
@@ -143,14 +143,6 @@
   justify-content: center;
   min-height: 52vh;
   gap: 14px;
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0.35s cubic-bezier(.4,0,.2,1);
-}
-
-.page-loader.hidden {
-  opacity: 0;
-  pointer-events: none;
 }
 .page-loader__text {
   font-size: 13px;

@@ -1,14 +1,3 @@
-.auth-pinned-box .auth-pinned-logo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.auth-pinned-box .auth-pinned-logo img {
-  display: block;
-  height: auto;
-}
 /*
 ╔══════════════════════════════════════════════════
 ║  OmniSensus · auth.css
@@ -1136,14 +1125,6 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  opacity: 1;
-  pointer-events: auto;
-  transition: opacity 0.35s cubic-bezier(.4,0,.2,1);
-}
-
-.auth-pinned-loading.hidden {
-  opacity: 0;
-  pointer-events: none;
 }
 
 .auth-pinned-loading-spinner {
