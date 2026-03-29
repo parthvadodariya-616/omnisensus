@@ -24,6 +24,26 @@ import PageTransition from '../components/PageTransition';
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <style>{`
+          * {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+          }
+        `}</style>
+        <script dangerouslySetInnerHTML={{__html:`
+          document.addEventListener('contextmenu', e => e.preventDefault());
+          document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) || (e.key === 'F12')) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+          });
+        `}} />
+      </head>
       <body>
         <PageTransition>
           {children}

@@ -1,11 +1,6 @@
 'use client';
-import { usePathname } from 'next/navigation';
-
+// Removed: The displayChildren swap caused a blank flash on every navigation.
+// Solution: render children directly — CSS handles the fade via .route-shell animation.
 export default function PageTransition({ children }) {
-  const pathname = usePathname();
-  return (
-    <div className="route-shell" data-route={pathname}>
-      {children}
-    </div>
-  );
+  return <div className="route-shell">{children}</div>;
 }
