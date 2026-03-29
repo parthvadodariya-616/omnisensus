@@ -171,7 +171,29 @@ export default function PatientDashboard() {
         {/* ── OVERVIEW ── */}
         {page === 'overview' && (
           <>
-            <div className="section-head">
+            {loading && (
+              <div>
+                {/* Profile + score skeleton */}
+                <div style={{ display:'grid', gridTemplateColumns:'280px 1fr', gap:20, marginBottom:20 }}>
+                  <div style={{ background:'#fff', border:'1px solid var(--border)', borderRadius:'var(--r-lg,10px)', padding:24, display:'flex', flexDirection:'column', alignItems:'center', gap:14, boxShadow:'var(--shadow-xs)' }}>
+                    <div style={{ width:70, height:70, borderRadius:'50%', background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />
+                    <div style={{ width:120, height:120, borderRadius:'50%', background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />
+                    {[...Array(4)].map((_,i)=>(<div key={i} style={{ height:12, width:'80%', borderRadius:5, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />))}
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+                    <div style={{ background:'#fff', border:'1px solid var(--border)', borderRadius:'var(--r-lg,10px)', padding:20, boxShadow:'var(--shadow-xs)', flex:1 }}>
+                      <div style={{ height:14, width:140, borderRadius:6, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite', marginBottom:16 }} />
+                      <div style={{ height:190, borderRadius:8, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />
+                    </div>
+                    <div style={{ background:'#fff', border:'1px solid var(--border)', borderRadius:'var(--r-lg,10px)', padding:20, boxShadow:'var(--shadow-xs)', flex:1 }}>
+                      <div style={{ height:14, width:160, borderRadius:6, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite', marginBottom:16 }} />
+                      <div style={{ height:190, borderRadius:8, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="section-head" style={{ visibility: loading ? "hidden" : "visible", height: loading ? 0 : "auto", overflow: "hidden" }}>
               <div><h2>Personal Health Overview</h2><p>Longitudinal surveillance of your clinical parameters</p></div>
               <span className={`badge ${tier === 'Stable' ? 'badge-success' : tier === 'Borderline' ? 'badge-warning' : 'badge-danger'}`}>{tier}</span>
             </div>
