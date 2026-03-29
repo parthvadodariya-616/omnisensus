@@ -41,6 +41,9 @@ importers:
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
+      chart.js:
+        specifier: ^4.4.0
+        version: 4.4.0
       recharts:
         specifier: ^3.8.0
         version: 3.8.0(react-dom@19.2.4(react@19.2.4))(react-is@16.13.1)(react@19.2.4)(redux@5.0.1)
@@ -3433,6 +3436,11 @@ packages:
   recast@0.23.11:
     resolution: {integrity: sha512-YTUo+Flmw4ZXiWfQKGcwwc11KnoRAYgzAE2E7mXKCjSviTKShtxBsN6YUUBB2gtaBzKzeKunxhUwNHQuRryhWA==}
     engines: {node: '>= 4'}
+
+  chart.js@4.4.0:
+    resolution: {integrity: sha512-zmoOjMCGtzFPXLBmI0aBHwzHbIRhFpV7aHpEaZH2M7rjfk3X+9kHD0iIrHOqTHFNcCbBBrfCXMNNcVGbwfyQ==}
+    engines: {node: '>=6'}
+    dev: false
 
   recharts@3.8.0:
     resolution: {integrity: sha512-Z/m38DX3L73ExO4Tpc9/iZWHmHnlzWG4njQbxsF5aSjwqmHNDDIm0rdEBArkwsBvR8U6EirlEHiQNYWCVh9sGQ==}
