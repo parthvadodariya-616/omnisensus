@@ -421,13 +421,13 @@ a { text-decoration: none; }
 .field-input::placeholder { color: var(--text-400); }
 
 /* Range slider */
-input[type=range] {
+input[type=range]:not(.wiz-input-range) {
   -webkit-appearance: none; appearance: none;
   width: 100%; height: 4px;
   border-radius: 99px; background: var(--border);
   outline: none; cursor: pointer;
 }
-input[type=range]::-webkit-slider-thumb {
+input[type=range]:not(.wiz-input-range)::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 16px; height: 16px;
   border-radius: 50%; background: var(--teal);
