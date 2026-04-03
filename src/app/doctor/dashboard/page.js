@@ -1,9 +1,10 @@
 // src/app/doctor/dashboard/page.js
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import api from '@/lib/api';
 import { ensureChartLoaded } from '@/lib/ensureChartLoaded';
-import { downloadReportPdf } from '@/lib/report';
+import { exportReportPdf } from '@/lib/pdfExport';
+import ModalPortal from '@/components/ModalPortal';
 
 const toErrorText = (detail, fallback) => {
   if (typeof detail === 'string') return detail;
@@ -115,6 +116,46 @@ const mapVitals = (v = {}) => ({
   sex: normalizeSex(v.sex ?? v.gender ?? v.sex_at_birth),
 });
 
+const RangeField = memo(function RangeField({
+  label,
+  id,
+  min,
+  max,
+  step = 1,
+  value,
+  display,
+  onRangeInput,
+}) {
+  const numericMin = Number(min);
+  const numericMax = Number(max);
+  const rawValue = Number(value);
+  const numericValue = Number.isFinite(rawValue) ? rawValue : numericMin;
+  const progress = numericMax === numericMin
+    ? 0
+    : Math.min(100, Math.max(0, ((numericValue - numericMin) / (numericMax - numericMin)) * 100));
+
+  return (
+    <div className="wiz-group">
+      <div className="range-head">
+        <label className="wiz-label" htmlFor={id}>{label}</label>
+        <div className="wiz-range-val">{display ? display(value) : value}</div>
+      </div>
+      <input
+        id={id}
+        type="range"
+        className="wiz-input-range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        aria-label={label}
+        onInput={e => onRangeInput(id, e.currentTarget.value)}
+        style={{ width: '100%', '--range-progress': `${progress}%` }}
+      />
+    </div>
+  );
+});
+
 export default function DoctorDiagnostic() {
   const [step, setStep] = useState(1);
   const [vitals, setVitals] = useState(null);
@@ -132,6 +173,7 @@ export default function DoctorDiagnostic() {
   // Removed AI answer state and typewriter logic (revert)
   const donutRef = useRef();
   const donutChart = useRef(null);
+  const rangeRaf = useRef(0);
 
   const showToast = (type, title, msg) => {
     setToast({ type, title, msg });
@@ -152,44 +194,46 @@ export default function DoctorDiagnostic() {
       setPatients(list);
       const firstId = list[0]?.patient_id || '';
       setSel(firstId);
-      if (!firstId) { setLoadingPatients(false); return; }
-
-      return Promise.allSettled([
-        api.get(`/patients/${firstId}/vitals`),
-        api.get(`/patients/${firstId}/history`),
-      ]).then(([vr, hr]) => {
-        if (cancelled) return;
-        const pat = list[0];
-        if (vr.status === 'fulfilled') {
-          const vv = vr.value.data?.vitals || vr.value.data || null;
-          if (vv) {
-            const mapped = mapVitals(vv);
-            setVitals(mergePatientFallback(mapped, pat));
-          }
-        }
-        if (hr.status === 'fulfilled') {
-          const visits = hr.value.data?.visits || [];
-          if (pat?.current_score != null)
-            setScores(s => ({ ...s, hs: pat.current_score }));
-        }
-      });
-    }).catch(() => { }).finally(() => {
+      if (!firstId) {
+        setVitals(null);
+        setResult(null);
+        setScores({ hs: null, cvd: null, meta: null, renal: null });
+        setLoadingVitals(false);
+      }
+    }).catch(() => {
+      if (cancelled) return;
+      setPatients([]);
+      setSel('');
+      setVitals(null);
+      setResult(null);
+      setScores({ hs: null, cvd: null, meta: null, renal: null });
+      setLoadingVitals(false);
+    }).finally(() => {
       if (!cancelled) setLoadingPatients(false);
     });
     return () => { cancelled = true; };
   }, []); // runs once on mount
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!sel) {
       setVitals(null);
+      setResult(null);
+      setScores({ hs: null, cvd: null, meta: null, renal: null });
       setLoadingVitals(false);
-      return;
+      return () => { cancelled = true; };
     }
+
     setLoadingVitals(true);
+    setResult(null);
+    setScores({ hs: null, cvd: null, meta: null, renal: null });
+
     Promise.allSettled([
       api.get(`/patients/${sel}/vitals`),
       api.get(`/patients/${sel}/history`),
     ]).then(([vr, hr]) => {
+      if (cancelled) return;
       const pat = patients.find(p => p.patient_id === sel);
 
       if (vr.status === 'fulfilled') {
@@ -204,21 +248,28 @@ export default function DoctorDiagnostic() {
         setVitals(null);
       }
 
+      let nextHs = null;
+
       if (hr.status === 'fulfilled') {
         const visits = hr.value.data?.visits || hr.value.data?.data || [];
         const latest = visits[0] || null;
-        if (latest) {
-          setScores(s => ({
-            ...s,
-            hs: latest.health_score ?? s.hs,
-          }));
+        if (latest?.health_score != null) {
+          const parsed = Number(latest.health_score);
+          nextHs = Number.isFinite(parsed) ? parsed : null;
         }
       }
 
       if (pat?.current_score != null) {
-        setScores(s => ({ ...s, hs: pat.current_score }));
+        const parsed = Number(pat.current_score);
+        nextHs = Number.isFinite(parsed) ? parsed : nextHs;
       }
-    }).finally(() => setLoadingVitals(false));
+
+      setScores({ hs: nextHs, cvd: null, meta: null, renal: null });
+    }).finally(() => {
+      if (!cancelled) setLoadingVitals(false);
+    });
+
+    return () => { cancelled = true; };
   }, [sel, patients]);
 
   // Donut chart init
@@ -279,18 +330,21 @@ export default function DoctorDiagnostic() {
     donutChart.current.update('none');
   }, [scores]);
 
+  useEffect(() => () => {
+    if (rangeRaf.current) cancelAnimationFrame(rangeRaf.current);
+  }, []);
+
   // Sanitize number input to prevent leading zeros
-  const sanitizeNumberInput = v => v.replace(/^0+(?!$)/, '');
+  const sanitizeNumberInput = useCallback(v => v.replace(/^0+(?!$)/, ''), []);
   // Always expect sanitized value in upd
-  const upd = (k, v) => setVitals(p => ({ ...p, [k]: isNaN(+v) ? v : +v }));
-  const nudge = (id, delta, min, max, step = 1) => {
-    setVitals(prev => {
-      const current = Number(prev?.[id] ?? 0);
-      const precision = String(step).includes('.') ? String(step).split('.')[1].length : 0;
-      const next = Math.min(max, Math.max(min, current + (delta * step)));
-      return { ...prev, [id]: Number(next.toFixed(precision)) };
+  const upd = useCallback((k, v) => setVitals(p => ({ ...p, [k]: isNaN(+v) ? v : +v })), []);
+  const handleRangeInput = useCallback((id, rawValue) => {
+    const nextValue = sanitizeNumberInput(rawValue);
+    if (rangeRaf.current) cancelAnimationFrame(rangeRaf.current);
+    rangeRaf.current = requestAnimationFrame(() => {
+      upd(id, nextValue);
     });
-  };
+  }, [sanitizeNumberInput, upd]);
 
   // ── REAL API CALL ─────────────────────────────────────────────────────
   const runDiagnostic = async () => {
@@ -401,28 +455,32 @@ export default function DoctorDiagnostic() {
 
       const payload = response?.data || {};
       const generated = payload?.report || payload?.data || payload;
-      // Validate presence of PDF URL
-      if (!generated?.pdf_url && !generated?.url) {
-        showToast('warn', 'PDF Not Available', 'The generated report does not contain a PDF URL.');
-        setPdfGenerating(false);
-        return;
-      }
+      const reportForPdf = {
+        ...(generated && typeof generated === 'object' ? generated : {}),
+        health_score: generated?.health_score ?? result?.health_score ?? scores.hs,
+        risk_tier: generated?.risk_tier ?? result?.risk_tier,
+        domain_scores: generated?.domain_scores ?? result?.domain_scores,
+        raw_risks: generated?.raw_risks ?? result?.raw_risks,
+        glucose: generated?.glucose ?? vitals?.glucose,
+        hba1c: generated?.hba1c ?? vitals?.hba1c,
+        bp_sys: generated?.bp_sys ?? vitals?.sbp,
+        bp_dia: generated?.bp_dia ?? vitals?.dbp,
+        egfr: generated?.egfr ?? vitals?.egfr,
+        bmi: generated?.bmi ?? vitals?.bmi,
+      };
 
-      // Use the full generated object for downloadReportPdf
-      const downloaded = await downloadReportPdf(
-        generated,
-        generated?.filename || generated?.report_filename || `clinical-report-${sel?.slice?.(0, 8) || 'omnisensus'}.pdf`,
-      );
-
-      if (downloaded) {
-        showToast('info', 'Report Ready', 'PDF generated and download started.');
-      } else {
-        showToast('warn', 'Download Failed', 'PDF could not be downloaded. Please check the archive or try again.');
-      }
+      exportReportPdf({
+        profile: patInfo || {},
+        report: reportForPdf,
+        recommendations: reportForPdf.summary_notes || result?.summary_notes || '',
+        onComplete: () => {
+          showToast('info', 'Report Ready', 'Secured PDF generated and downloaded.');
+        },
+      });
 
       setPdfOpen(false);
     } catch (err) {
-      showToast('warn', 'Generation Failed', 'Could not generate/download PDF right now.');
+      showToast('warn', 'Generation Failed', 'Could not generate/download secured PDF right now.');
     } finally {
       setPdfGenerating(false);
     }
@@ -449,53 +507,6 @@ export default function DoctorDiagnostic() {
     : v > 25
       ? { cls: 'trend-neu', level: 'Borderline', icon: '—' }
       : { cls: 'trend-down', level: 'Low', icon: '↓' };
-
-  const RangeField = ({ label, id, min, max, step = 1, value, display }) => {
-    const numericMin = Number(min);
-    const numericMax = Number(max);
-    const rawValue = Number(value);
-    const numericValue = Number.isFinite(rawValue) ? rawValue : numericMin;
-    const progress = numericMax === numericMin
-      ? 0
-      : Math.min(100, Math.max(0, ((numericValue - numericMin) / (numericMax - numericMin)) * 100));
-
-    return (
-      <div className="wiz-group">
-        <div className="range-head">
-          <label className="wiz-label">{label}</label>
-          <div className="range-controls">
-            <button
-              type="button"
-              className="range-nudge"
-              onClick={() => nudge(id, -1, min, max, step)}
-              aria-label={`Decrease ${label}`}
-            >
-              -
-            </button>
-            <div className="wiz-range-val">{display ? display(value) : value}</div>
-            <button
-              type="button"
-              className="range-nudge"
-              onClick={() => nudge(id, 1, min, max, step)}
-              aria-label={`Increase ${label}`}
-            >
-              +
-            </button>
-          </div>
-        </div>
-        <input
-          type="range"
-          className="wiz-input-range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onInput={e => upd(id, sanitizeNumberInput(e.currentTarget.value))}
-          style={{ width: '100%', '--range-progress': `${progress}%` }}
-        />
-      </div>
-    );
-  };
 
   return (
     <div>
@@ -668,13 +679,13 @@ export default function DoctorDiagnostic() {
                   {step === 1 && (
                     <div>
                       <div className="wizard-grid">
-                        <RangeField label="Heart Rate (bpm)" id="hr" min={40} max={160} value={vitals.hr} />
-                        <RangeField label="Systolic BP (mmHg)" id="sbp" min={80} max={200} value={vitals.sbp} />
-                        <RangeField label="Diastolic BP (mmHg)" id="dbp" min={50} max={130} value={vitals.dbp} />
-                        <RangeField label="Respiratory Rate (/min)" id="rr" min={8} max={40} value={vitals.rr} />
+                        <RangeField label="Heart Rate (bpm)" id="hr" min={40} max={160} value={vitals.hr} onRangeInput={handleRangeInput} />
+                        <RangeField label="Systolic BP (mmHg)" id="sbp" min={80} max={200} value={vitals.sbp} onRangeInput={handleRangeInput} />
+                        <RangeField label="Diastolic BP (mmHg)" id="dbp" min={50} max={130} value={vitals.dbp} onRangeInput={handleRangeInput} />
+                        <RangeField label="Respiratory Rate (/min)" id="rr" min={8} max={40} value={vitals.rr} onRangeInput={handleRangeInput} />
                         <RangeField label="Body Temp (°C)" id="temp" min={350} max={420} value={vitals.temp}
-                          display={v => (v / 10).toFixed(1)} />
-                        <RangeField label="SpO2 (%)" id="spo2" min={80} max={100} value={vitals.spo2} />
+                          display={v => (v / 10).toFixed(1)} onRangeInput={handleRangeInput} />
+                        <RangeField label="SpO2 (%)" id="spo2" min={80} max={100} value={vitals.spo2} onRangeInput={handleRangeInput} />
                       </div>
                       <div className="wizard-nav">
                         <button className="btn-wiz btn-wiz-filled" onClick={() => setStep(2)}>Next: Biomarkers →</button>
@@ -862,12 +873,13 @@ export default function DoctorDiagnostic() {
 
           {/* PDF Preview Modal */}
           {pdfOpen && (
-            <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setPdfOpen(false)}>
-              <div className="modal-box">
+            <ModalPortal>
+              <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setPdfOpen(false)}>
+                <div className="modal-box">
                 <div className="modal-header">
                   <div>
                     <h3>Clinical Diagnostic Report Preview</h3>
-                    <p className="pdf-modal-subhead">Generate polished PDF and download instantly</p>
+                    <p className="pdf-modal-subhead">Generate protected PDF report and download instantly</p>
                   </div>
                   <button className="modal-close" onClick={() => setPdfOpen(false)}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -958,11 +970,12 @@ export default function DoctorDiagnostic() {
                       <polyline points="7 10 12 15 17 10" />
                       <line x1="12" y1="15" x2="12" y2="3" />
                     </svg>
-                    {pdfGenerating ? 'Generating...' : 'Generate PDF'}
+                    {pdfGenerating ? 'Generating...' : 'Download Secured PDF'}
                   </button>
                 </div>
+                </div>
               </div>
-            </div>
+            </ModalPortal>
           )}
         </>
       )}
