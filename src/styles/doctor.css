@@ -228,15 +228,19 @@
 .modal-backdrop.open { display: flex; }
 .modal-box {
   background: var(--white); border-radius: 14px;
-  width: 100%; max-width: 960px; max-height: 92vh;
-  overflow-y: auto; box-shadow: var(--shadow-lg);
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(90vh, 800px);
+  overflow-y: auto; overflow-x: hidden;
+  box-shadow: var(--shadow-lg);
   animation: modalIn .2s ease;
+  display: flex; flex-direction: column;
 }
 .modal-header {
   padding: 16px 20px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; background: var(--white);
   border-radius: 14px 14px 0 0; z-index: 1;
+  flex-shrink: 0;
 }
 .modal-title {
   font-size: 15px; font-weight: 700; color: var(--text-900);
@@ -255,6 +259,7 @@
   display: flex; justify-content: flex-end; gap: 9px;
   position: sticky; bottom: 0; background: var(--white);
   border-radius: 0 0 14px 14px;
+  flex-shrink: 0;
 }
 
 /* Lab receipt */
@@ -383,13 +388,22 @@
   padding: 0;
   border: 0;
   background: transparent;
+  --range-progress: 0%;
+  --range-fill: var(--teal);
+  --range-empty: #FFFFFF;
   -webkit-appearance: none;
   appearance: none;
 }
 .wiz-input-range:focus { outline: none; }
 .wiz-input-range::-webkit-slider-runnable-track {
   height: 8px;
-  background: linear-gradient(90deg, rgba(16,132,126,.95), rgba(16,132,126,.85));
+  background: linear-gradient(
+    90deg,
+    var(--range-fill) 0%,
+    var(--range-fill) var(--range-progress),
+    var(--range-empty) var(--range-progress),
+    var(--range-empty) 100%
+  );
   border-radius: 999px;
   border: 1px solid rgba(16,132,126,.18);
 }
@@ -408,9 +422,14 @@
 .wiz-input-range:active::-webkit-slider-thumb { transform: scale(1.08); }
 .wiz-input-range::-moz-range-track {
   height: 8px;
-  background: linear-gradient(90deg, rgba(16,132,126,.95), rgba(16,132,126,.85));
+  background: var(--range-empty);
   border-radius: 999px;
   border: 1px solid rgba(16,132,126,.18);
+}
+.wiz-input-range::-moz-range-progress {
+  height: 8px;
+  background: var(--range-fill);
+  border-radius: 999px;
 }
 .wiz-input-range::-moz-range-thumb {
   width: 20px;
@@ -460,14 +479,14 @@
 
 .btn-report { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; background: var(--teal); color: #fff; border: 1.5px solid var(--teal); margin-top: 8px; }
 
-.modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,.4); backdrop-filter: blur(3px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 18px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,.4); backdrop-filter: blur(3px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
 .modal-overlay.open { display: flex; }
 .btn-modal { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; }
 .btn-modal-outline { background: #fff; color: var(--text-500); border: 1.5px solid var(--border); }
 .btn-modal-filled { background: var(--teal); color: #fff; border: 1.5px solid var(--teal); }
 
-.lab-report { padding: 20px; font-size: 12px; }
-.lab-report-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid var(--teal); margin-bottom: 13px; }
+.lab-report { padding: 20px; font-size: 12px; overflow-x: hidden; flex: 1; }
+.lab-report-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid var(--teal); margin-bottom: 13px; flex-wrap: wrap; gap: 8px; }
 .lab-report-brand { font-size: 17px; font-weight: 800; color: var(--teal); letter-spacing: -.4px; }
 .lab-report-brand span { color: var(--text-900); }
 .lab-report-meta { text-align: right; font-size: 10.5px; color: var(--text-500); line-height: 1.8; }
@@ -475,18 +494,30 @@
 .pid-item label { font-size: 10px; font-weight: 600; color: var(--text-400); text-transform: uppercase; letter-spacing: .4px; display: block; margin-bottom: 2px; }
 .pid-item span { font-size: 12px; font-weight: 700; color: var(--text-900); }
 .lab-section-title { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: .8px; text-transform: uppercase; margin: 12px 0 7px; padding-bottom: 5px; border-bottom: 1px solid var(--teal-100); }
-.report-table { width: 100%; border-collapse: collapse; }
+.report-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .report-table th { text-align: left; padding: 5px 8px; font-size: 10px; font-weight: 700; color: var(--text-400); text-transform: uppercase; letter-spacing: .4px; border-bottom: 1.5px solid var(--border); }
-.report-table td { padding: 7px 8px; font-size: 11.5px; color: var(--text-700); border-bottom: 1px solid var(--bg); }
+.report-table td { padding: 7px 8px; font-size: 11.5px; color: var(--text-700); border-bottom: 1px solid var(--bg); word-break: break-word; }
 .report-table tr:last-child td { border-bottom: none; }
 .val-normal { color: var(--success); font-weight: 700; }
 .val-borderline { color: var(--warning); font-weight: 700; }
 .val-high { color: var(--danger); font-weight: 700; }
-.risk-strat { background: var(--bg); border-radius: 8px; padding: 13px 16px; display: flex; gap: 16px; align-items: center; margin: 10px 0; }
+.risk-strat { background: var(--bg); border-radius: 8px; padding: 13px 16px; display: flex; gap: 16px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
 .risk-score-big { font-size: 38px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
 .risk-desc h4 { font-size: 13px; font-weight: 700; color: var(--text-900); }
 .risk-desc p { font-size: 11px; color: var(--text-500); margin-top: 4px; line-height: 1.6; }
 
 @media (max-width: 920px) {
   .wizard-wrap { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .modal-box {
+    width: calc(100vw - 16px);
+    max-height: 95vh;
+    border-radius: 10px;
+  }
+  .lab-report-header { flex-direction: column; gap: 8px; }
+  .lab-report-meta { text-align: left; }
+  .lab-report-pid { grid-template-columns: repeat(2,1fr); }
+  .risk-strat { flex-direction: column; align-items: flex-start; }
 }

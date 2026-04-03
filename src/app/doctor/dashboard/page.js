@@ -23,6 +23,77 @@ const toErrorText = (detail, fallback) => {
   return fallback;
 };
 
+const normalizeSex = (value) => {
+  const raw = String(value ?? '').trim();
+  const low = raw.toLowerCase();
+  if (!low) return '';
+  if (low === 'm' || low === 'male' || low === 'man') return 'Male';
+  if (low === 'f' || low === 'female' || low === 'woman') return 'Female';
+  if (low === 'o' || low === 'other' || low === 'non-binary' || low === 'nonbinary') return 'Other';
+  return raw;
+};
+
+const normalizeSmoke = (value) => {
+  if (typeof value === 'boolean') return value ? 'current' : 'never';
+  const low = String(value ?? '').trim().toLowerCase();
+  if (!low) return '';
+  if (low === 'current' || low === 'yes' || low === 'true' || low === '1' || low === 'smoker') return 'current';
+  if (low === 'former' || low === 'ex' || low === 'past') return 'former';
+  if (low === 'never' || low === 'no' || low === 'false' || low === '0' || low === 'nonsmoker' || low === 'non-smoker') return 'never';
+  return '';
+};
+
+const normalizeDiabetes = (value) => {
+  if (typeof value === 'boolean') return value ? 't2' : 'no';
+  const low = String(value ?? '').trim().toLowerCase();
+  if (!low) return '';
+  if (low === 'no' || low === 'none' || low === 'false' || low === '0') return 'no';
+  if (low === 'pre' || low === 'prediabetes' || low === 'pre-diabetes') return 'pre';
+  if (low === 't2' || low === 'type2' || low === 'type ii' || low === 'type-2' || low === 'yes' || low === 'true' || low === '1' || low === 'diabetes') return 't2';
+  return '';
+};
+
+const normalizeYesNo = (value) => {
+  if (typeof value === 'boolean') return value ? 'yes' : 'no';
+  const low = String(value ?? '').trim().toLowerCase();
+  if (!low) return '';
+  if (low === 'yes' || low === 'true' || low === '1' || low === 'y') return 'yes';
+  if (low === 'no' || low === 'false' || low === '0' || low === 'n') return 'no';
+  return '';
+};
+
+const ageFromDob = (dateOfBirth) => {
+  if (!dateOfBirth) return 0;
+  const dob = new Date(dateOfBirth);
+  if (Number.isNaN(dob.getTime())) return 0;
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const monthDiff = now.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) age -= 1;
+  return Math.max(0, age);
+};
+
+const mergePatientFallback = (mapped, pat) => {
+  const mappedAge = Number(mapped?.age || 0);
+  const mappedBmi = Number(mapped?.bmi || 0);
+  const patientAge = Number(pat?.age || 0) || ageFromDob(pat?.date_of_birth);
+  const patientBmi = Number(pat?.bmi || 0);
+  const patientSex = normalizeSex(pat?.sex ?? pat?.gender ?? pat?.sex_at_birth ?? '');
+  const patientSmoke = normalizeSmoke(pat?.smoker);
+  const patientDiabetes = normalizeDiabetes(pat?.known_diabetes);
+  const patientFamCvd = normalizeYesNo(pat?.known_heart_disease);
+
+  return {
+    ...mapped,
+    age: mappedAge || patientAge || 0,
+    bmi: mappedBmi || patientBmi || 0,
+    sex: mapped?.sex || patientSex || '',
+    smoke: mapped?.smoke || patientSmoke || 'never',
+    diabetes: mapped?.diabetes || patientDiabetes || 'no',
+    famcvd: mapped?.famcvd || patientFamCvd || 'no',
+  };
+};
+
 const mapVitals = (v = {}) => ({
   hr: Number(v.heart_rate ?? v.hr ?? 0),
   sbp: Number(v.blood_pressure_sys ?? v.sbp ?? v.bp_sys ?? 0),
@@ -38,10 +109,10 @@ const mapVitals = (v = {}) => ({
   crp: Number(v.crp ?? 0),
   bmi: Number(v.bmi ?? 0),
   age: Number(v.age ?? 0),
-  smoke: v.smoke || 'never',
-  famcvd: v.famcvd || 'no',
-  diabetes: v.diabetes || 'no',
-  sex: v.sex || 'Male',
+  smoke: normalizeSmoke(v.smoke ?? v.smoker),
+  famcvd: normalizeYesNo(v.famcvd ?? v.family_history_cvd ?? v.known_heart_disease),
+  diabetes: normalizeDiabetes(v.diabetes ?? v.diabetes_status ?? v.known_diabetes),
+  sex: normalizeSex(v.sex ?? v.gender ?? v.sex_at_birth),
 });
 
 export default function DoctorDiagnostic() {
@@ -88,13 +159,16 @@ export default function DoctorDiagnostic() {
         api.get(`/patients/${firstId}/history`),
       ]).then(([vr, hr]) => {
         if (cancelled) return;
+        const pat = list[0];
         if (vr.status === 'fulfilled') {
           const vv = vr.value.data?.vitals || vr.value.data || null;
-          if (vv) setVitals(mapVitals(vv));
+          if (vv) {
+            const mapped = mapVitals(vv);
+            setVitals(mergePatientFallback(mapped, pat));
+          }
         }
         if (hr.status === 'fulfilled') {
           const visits = hr.value.data?.visits || [];
-          const pat = list[0];
           if (pat?.current_score != null)
             setScores(s => ({ ...s, hs: pat.current_score }));
         }
@@ -122,12 +196,7 @@ export default function DoctorDiagnostic() {
         const vv = vr.value.data?.vitals || vr.value.data || null;
         if (vv) {
           const mapped = mapVitals(vv);
-          setVitals({
-            ...mapped,
-            age: mapped.age || Number(pat?.age || 0),
-            sex: mapped.sex || (pat?.gender || 'Male'),
-            bmi: mapped.bmi || Number(pat?.bmi || 0),
-          });
+          setVitals(mergePatientFallback(mapped, pat));
         } else {
           setVitals(null);
         }
@@ -381,42 +450,52 @@ export default function DoctorDiagnostic() {
       ? { cls: 'trend-neu', level: 'Borderline', icon: '—' }
       : { cls: 'trend-down', level: 'Low', icon: '↓' };
 
-  const RangeField = ({ label, id, min, max, step = 1, value, display }) => (
-    <div className="wiz-group">
-      <div className="range-head">
-        <label className="wiz-label">{label}</label>
-        <div className="range-controls">
-          <button
-            type="button"
-            className="range-nudge"
-            onClick={() => nudge(id, -1, min, max, step)}
-            aria-label={`Decrease ${label}`}
-          >
-            -
-          </button>
-          <div className="wiz-range-val">{display ? display(value) : value}</div>
-          <button
-            type="button"
-            className="range-nudge"
-            onClick={() => nudge(id, 1, min, max, step)}
-            aria-label={`Increase ${label}`}
-          >
-            +
-          </button>
+  const RangeField = ({ label, id, min, max, step = 1, value, display }) => {
+    const numericMin = Number(min);
+    const numericMax = Number(max);
+    const rawValue = Number(value);
+    const numericValue = Number.isFinite(rawValue) ? rawValue : numericMin;
+    const progress = numericMax === numericMin
+      ? 0
+      : Math.min(100, Math.max(0, ((numericValue - numericMin) / (numericMax - numericMin)) * 100));
+
+    return (
+      <div className="wiz-group">
+        <div className="range-head">
+          <label className="wiz-label">{label}</label>
+          <div className="range-controls">
+            <button
+              type="button"
+              className="range-nudge"
+              onClick={() => nudge(id, -1, min, max, step)}
+              aria-label={`Decrease ${label}`}
+            >
+              -
+            </button>
+            <div className="wiz-range-val">{display ? display(value) : value}</div>
+            <button
+              type="button"
+              className="range-nudge"
+              onClick={() => nudge(id, 1, min, max, step)}
+              aria-label={`Increase ${label}`}
+            >
+              +
+            </button>
+          </div>
         </div>
+        <input
+          type="range"
+          className="wiz-input-range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onInput={e => upd(id, sanitizeNumberInput(e.currentTarget.value))}
+          style={{ width: '100%', '--range-progress': `${progress}%` }}
+        />
       </div>
-      <input
-        type="range"
-        className="wiz-input-range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onInput={e => upd(id, sanitizeNumberInput(e.currentTarget.value))}
-        style={{ width: '100%' }}
-      />
-    </div>
-  );
+    );
+  };
 
   return (
     <div>
@@ -639,9 +718,12 @@ export default function DoctorDiagnostic() {
                         </div>
                         <div className="wiz-group">
                           <label className="wiz-label">Sex at Birth</label>
-                          <select className="wiz-input" value={vitals.sex || 'Male'}
+                          <select className="wiz-input" value={vitals.sex || ''}
                             onChange={e => upd('sex', e.target.value)}>
-                            <option>Male</option><option>Female</option><option>Other</option>
+                            <option value="">Unknown</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
                           </select>
                         </div>
                         <div className="wiz-group">
@@ -808,7 +890,7 @@ export default function DoctorDiagnostic() {
                   <div className="lab-report-pid">
                     <div className="pid-item"><label>Patient</label><span>{patients.find(p => p.patient_id === sel)?.full_name || 'Unknown'}</span></div>
                     <div className="pid-item"><label>ID</label><span>{sel?.slice(0, 8) || 'N/A'}</span></div>
-                    <div className="pid-item"><label>Age / Sex</label><span>{vitals.age} yrs / {vitals.sex || 'M'}</span></div>
+                    <div className="pid-item"><label>Age / Sex</label><span>{vitals.age} yrs / {vitals.sex || 'N/A'}</span></div>
                     <div className="pid-item"><label>BMI</label><span>{vitals.bmi} kg/m²</span></div>
                     <div className="pid-item"><label>Score</label><span style={{ color: ringColor, fontWeight: 700 }}>{scores.hs}/100</span></div>
                     <div className="pid-item"><label>Risk Tier</label>
