@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { ensureChartLoaded } from '@/lib/ensureChartLoaded';
-import { downloadReportPdf, resolvePdfUrl, getPdfViewerUrl, openReportPdfInNewTab } from '@/lib/report';
+import { exportReportPdf } from '@/lib/pdfExport';
+import ModalPortal from '@/components/ModalPortal';
 
 export default function PatientDashboard() {
   const [profile,   setProfile]   = useState(null);
@@ -17,7 +18,6 @@ export default function PatientDashboard() {
   const [page,      setPage]      = useState('overview');
   const [toast,     setToast]     = useState(null);
   const [reportPreview, setReportPreview] = useState(null);
-  const [reportPreviewLoading, setReportPreviewLoading] = useState(false);
   const [downloadKey, setDownloadKey] = useState('');
   const scoreRef = useRef(); const bioRef = useRef();
   const charts = useRef({});
@@ -26,6 +26,7 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     const load = async () => {
+      setError('');
       try {
         const pr = await api.get('/patients/me');
         const p = pr.data?.patient || pr.data || null;
@@ -48,7 +49,11 @@ export default function PatientDashboard() {
           if (aRes.status === 'fulfilled') setAppts(aRes.value.data?.appointments || aRes.value.data?.data || []);
           if (vRes.status === 'fulfilled') setVitals(vRes.value.data?.vitals || vRes.value.data || null);
         }
-      } catch { } finally { setLoading(false); }
+      } catch {
+        setError('Unable to load dashboard data right now. Please refresh and try again.');
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -86,11 +91,18 @@ export default function PatientDashboard() {
       }
     };
     ensureChartLoaded().then(() => { if (!cancelled) init(); }).catch(() => {});
-    return () => { cancelled = true; Object.values(charts.current).forEach(c => c?.destroy()); };
+    return () => {
+      cancelled = true;
+      Object.values(charts.current).forEach(c => c?.destroy());
+      charts.current = {};
+    };
   }, [history]);
 
   const latest = history[0] || {};
   const v = vitals || {};
+  const now = new Date();
+  const sortedAppts = [...appts].sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+  const upcomingAppt = sortedAppts.find(a => new Date(a.scheduled_at) > now) || null;
   const score = profile?.current_score ?? latest.health_score ?? 0;
   const tier  = profile?.current_tier  ?? latest.risk_tier    ?? 'Stable';
   const ringColor = score >= 70 ? '#10847E' : score >= 50 ? '#F59E0B' : '#E85D6A';
@@ -98,7 +110,6 @@ export default function PatientDashboard() {
   const tierLabel = tier === 'Stable' ? 'Optimal Range' : tier === 'Borderline' ? 'Borderline Risk' : 'Elevated Risk';
   const tierSub   = tier === 'Stable' ? 'All vitals within reference bounds' : tier === 'Borderline' ? 'Lifestyle intervention advised' : 'Immediate clinical consultation required';
   const initials  = profile?.full_name?.split(' ').map(w => w[0]).join('').slice(0, 2) || 'PT';
-  const now = new Date();
 
   // Med reminder check
   const medsWithDue = (meds || []).map(m => {
@@ -118,23 +129,24 @@ export default function PatientDashboard() {
 
   const openReportPreview = (report) => {
     setReportPreview(report);
-    setReportPreviewLoading(Boolean(resolvePdfUrl(report)));
   };
 
   const handleReportDownload = async (report) => {
-    if (!resolvePdfUrl(report)) {
-      showToast('warn', 'PDF Pending', 'This report PDF is not available yet.');
-      return;
-    }
+    const key = String(report.report_id || report.visit_id || report.filename || 'active');
+    setDownloadKey(key);
     try {
-      const ok = await downloadReportPdf(report, `report-${report.report_id || report.visit_id || 'omnisensus'}.pdf`);
-      if (ok) {
-        showToast('info', 'Download Started', 'Your report PDF is being downloaded.');
-      } else {
-        showToast('warn', 'Download Failed', 'Unable to download this report right now.');
-      }
+      exportReportPdf({
+        profile: profile || {},
+        report,
+        recommendations: report.summary_notes,
+        onComplete: () => {
+          showToast('info', 'PDF Downloaded', 'PDF downloaded successfully.');
+          setDownloadKey('');
+        },
+      });
     } catch {
       showToast('warn', 'Download Failed', 'Unable to download this report right now.');
+      setDownloadKey('');
     }
   };
 
@@ -171,34 +183,14 @@ export default function PatientDashboard() {
         {/* ── OVERVIEW ── */}
         {page === 'overview' && (
           <>
-            {loading && (
-              <div>
-                {/* Profile + score skeleton */}
-                <div style={{ display:'grid', gridTemplateColumns:'280px 1fr', gap:20, marginBottom:20 }}>
-                  <div style={{ background:'#fff', border:'1px solid var(--border)', borderRadius:'var(--r-lg,10px)', padding:24, display:'flex', flexDirection:'column', alignItems:'center', gap:14, boxShadow:'var(--shadow-xs)' }}>
-                    <div style={{ width:70, height:70, borderRadius:'50%', background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />
-                    <div style={{ width:120, height:120, borderRadius:'50%', background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />
-                    {[...Array(4)].map((_,i)=>(<div key={i} style={{ height:12, width:'80%', borderRadius:5, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />))}
-                  </div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-                    <div style={{ background:'#fff', border:'1px solid var(--border)', borderRadius:'var(--r-lg,10px)', padding:20, boxShadow:'var(--shadow-xs)', flex:1 }}>
-                      <div style={{ height:14, width:140, borderRadius:6, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite', marginBottom:16 }} />
-                      <div style={{ height:190, borderRadius:8, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />
-                    </div>
-                    <div style={{ background:'#fff', border:'1px solid var(--border)', borderRadius:'var(--r-lg,10px)', padding:20, boxShadow:'var(--shadow-xs)', flex:1 }}>
-                      <div style={{ height:14, width:160, borderRadius:6, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite', marginBottom:16 }} />
-                      <div style={{ height:190, borderRadius:8, background:'linear-gradient(90deg,var(--bg)25%,var(--border)50%,var(--bg)75%)', backgroundSize:'800px 100%', animation:'shimmer 1.4s infinite' }} />
-                    </div>
-                  </div>
+            {!loading && (
+              <>
+                <div className="section-head">
+                  <div><h2>Personal Health Overview</h2><p>Longitudinal surveillance of your clinical parameters</p></div>
+                  <span className={`badge ${tier === 'Stable' ? 'badge-success' : tier === 'Borderline' ? 'badge-warning' : 'badge-danger'}`}>{tier}</span>
                 </div>
-              </div>
-            )}
-            <div className="section-head" style={{ visibility: loading ? "hidden" : "visible", height: loading ? 0 : "auto", overflow: "hidden" }}>
-              <div><h2>Personal Health Overview</h2><p>Longitudinal surveillance of your clinical parameters</p></div>
-              <span className={`badge ${tier === 'Stable' ? 'badge-success' : tier === 'Borderline' ? 'badge-warning' : 'badge-danger'}`}>{tier}</span>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20, marginBottom: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20, marginBottom: 20 }}>
               {/* Profile Card */}
               <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
                 <div style={{ width: 70, height: 70, borderRadius: '50%', background: ringColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700, color: '#fff', boxShadow: `0 0 0 4px ${ringColor}30` }}>
@@ -234,7 +226,7 @@ export default function PatientDashboard() {
                     { k: 'Blood Group', v: profile?.blood_group ?? '—', accent: false },
                     { k: 'Attending Dr.', v: profile?.doctor_name ?? '—', accent: true },
                     { k: 'Last Scan', v: profile?.last_scan_at ? new Date(profile.last_scan_at).toLocaleDateString() : '—', accent: false },
-                    { k: 'Next Appt.', v: appts.filter(a => new Date(a.scheduled_at) > now).sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))[0]?.scheduled_at ? new Date(appts.find(a => new Date(a.scheduled_at) > now)?.scheduled_at).toLocaleDateString() : '—', accent: true },
+                    { k: 'Next Appt.', v: upcomingAppt?.scheduled_at ? new Date(upcomingAppt.scheduled_at).toLocaleDateString() : '—', accent: true },
                   ].map(f => (
                     <div key={f.k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--grey-bg)', borderRadius: 7 }}>
                       <span style={{ fontSize: 11, color: 'var(--grey-text)' }}>{f.k}</span>
@@ -280,7 +272,9 @@ export default function PatientDashboard() {
                   <div style={{ position: 'relative', height: 140 }}><canvas ref={bioRef} /></div>
                 </div>
               </div>
-            </div>
+                </div>
+              </>
+            )}
           </>
         )}
 
@@ -311,7 +305,7 @@ export default function PatientDashboard() {
                     <div className="report-meta">
                       <span className={`badge ${r.risk_tier === 'Critical' ? 'badge-danger' : r.risk_tier === 'Borderline' ? 'badge-warning' : 'badge-success'}`}>{r.risk_tier ?? 'Stable'}</span>
                       <button className="btn-sm btn-sm-teal" onClick={() => openReportPreview(r)}>View</button>
-                      <button className="btn-sm btn-sm-outline" disabled={!resolvePdfUrl(r) || downloadKey === String(r.report_id || r.visit_id || r.filename || '')} onClick={() => handleReportDownload(r)}>
+                      <button className="btn-sm btn-sm-outline" disabled={downloadKey === String(r.report_id || r.visit_id || r.filename || '')} onClick={() => handleReportDownload(r)}>
                         {downloadKey === String(r.report_id || r.visit_id || r.filename || '') ? 'Downloading...' : 'Download'}
                       </button>
                     </div>
@@ -409,7 +403,7 @@ export default function PatientDashboard() {
               <div style={{ textAlign: 'center', padding: 60, color: 'var(--grey-text)' }}>No appointments found</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {appts.sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at)).map((a, i) => (
+                {sortedAppts.map((a, i) => (
                   <div key={a.appointment_id || i} className="report-item">
                     <div className="report-icon" style={{ background: a.status === 'completed' ? 'var(--success-bg)' : 'var(--teal-light)' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -429,12 +423,13 @@ export default function PatientDashboard() {
         )}
 
         {reportPreview && (
-          <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setReportPreview(null)}>
-            <div className="modal-box" style={{ maxWidth: 900 }}>
+          <ModalPortal>
+            <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setReportPreview(null)}>
+              <div className="modal-box" style={{ maxWidth: 900 }}>
               <div className="modal-header">
                 <div>
                   <h3>{reportPreview.report_type || reportPreview.visit_type || 'Diagnostic Report'}</h3>
-                  <p className="pdf-modal-subhead">Review all report details below. Download for official PDF.</p>
+                  <p className="pdf-modal-subhead">Review all report details below. Download protected PDF report.</p>
                 </div>
                 <button className="modal-close" onClick={() => setReportPreview(null)}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -481,10 +476,11 @@ export default function PatientDashboard() {
               </div>
               <div className="modal-footer">
                 <button className="btn-modal btn-modal-outline" onClick={() => setReportPreview(null)}>Close</button>
-                <button className="btn-modal btn-modal-filled" onClick={() => handleReportDownload(reportPreview)}>Download PDF</button>
+                <button className="btn-modal btn-modal-filled" onClick={() => handleReportDownload(reportPreview)}>Download Secured PDF</button>
+              </div>
               </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
       </div>
     </div>

@@ -2,8 +2,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { downloadReportPdf, resolvePdfUrl, getPdfViewerUrl, openReportPdfInNewTab } from '@/lib/report';
 import { exportReportPdf } from '@/lib/pdfExport';
+import ModalPortal from '@/components/ModalPortal';
 
 const toErrorText = (detail, fallback) => {
   if (typeof detail === 'string') return detail;
@@ -87,12 +87,12 @@ export default function DoctorReports() {
         report,
         recommendations: report.summary_notes,
         onComplete: () => {
-          showToast('info', 'PDF Downloaded');
+          showToast('info', 'Secured PDF downloaded');
           setDownloadKey('');
         },
       });
     } catch {
-      showToast('warn', 'Could not download this PDF right now.');
+      showToast('warn', 'Could not download this secured PDF right now.');
       setDownloadKey('');
     }
   };
@@ -148,7 +148,7 @@ export default function DoctorReports() {
                 <button className="btn-sm btn-sm-teal" onClick={() => openPreview(r)}>View</button>
                 <button
                   className="btn-sm btn-sm-outline"
-                  disabled={!resolvePdfUrl(r) || downloadKey === String(r.report_id || r.visit_id || r.filename || '')}
+                  disabled={downloadKey === String(r.report_id || r.visit_id || r.filename || '')}
                   onClick={() => handleDownload(r)}
                 >
                   {downloadKey === String(r.report_id || r.visit_id || r.filename || '') ? 'Downloading...' : 'Download'}
@@ -160,12 +160,13 @@ export default function DoctorReports() {
       )}
 
       {pdfOpen && selRpt && (
-        <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setPdfOpen(false)}>
-          <div className="modal-box">
+        <ModalPortal>
+          <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setPdfOpen(false)}>
+            <div className="modal-box">
             <div className="modal-header">
               <div>
                 <h3>Report Preview</h3>
-                <p className="pdf-modal-subhead">Review all report details below. Download for official PDF.</p>
+                <p className="pdf-modal-subhead">Review all report details below. Download protected PDF report.</p>
               </div>
               <button className="modal-close" onClick={() => setPdfOpen(false)}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -217,11 +218,12 @@ export default function DoctorReports() {
                 disabled={!selRpt}
                 onClick={() => handleDownload(selRpt)}
               >
-                {downloadKey === String(selRpt.report_id || selRpt.visit_id || selRpt.filename || '') ? 'Downloading...' : 'Download PDF'}
+                {downloadKey === String(selRpt.report_id || selRpt.visit_id || selRpt.filename || '') ? 'Downloading...' : 'Download Secured PDF'}
               </button>
             </div>
+            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
     </div>
   );

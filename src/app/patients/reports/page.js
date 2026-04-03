@@ -3,8 +3,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { downloadReportPdf, resolvePdfUrl, getPdfViewerUrl, openReportPdfInNewTab } from '@/lib/report';
 import { exportReportPdf } from '@/lib/pdfExport';
+import ModalPortal from '@/components/ModalPortal';
 
 export default function PatientReports() {
   const [reports, setReports] = useState([]);
@@ -12,7 +12,6 @@ export default function PatientReports() {
   const [error, setError] = useState(null);
   const [profile, setProfile] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [downloadKey, setDownloadKey] = useState('');
 
@@ -30,12 +29,12 @@ export default function PatientReports() {
         report,
         recommendations: report.summary_notes,
         onComplete: () => {
-          showToast('PDF Downloaded', 'info');
+          showToast('Secured PDF downloaded', 'info');
           setDownloadKey('');
         },
       });
     } catch {
-      showToast('Could not download this PDF right now.', 'warn');
+      showToast('Could not download this secured PDF right now.', 'warn');
       setDownloadKey('');
     }
   };
@@ -82,12 +81,13 @@ export default function PatientReports() {
         )}
         {/* View/Preview modal */}
         {preview && (
-          <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setPreview(null)}>
-            <div className="modal-box">
+          <ModalPortal>
+            <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setPreview(null)}>
+              <div className="modal-box">
               <div className="modal-header">
                 <div>
                   <h3>Report Preview</h3>
-                  <p className="pdf-modal-subhead">Review all report details below. Download for official PDF.</p>
+                  <p className="pdf-modal-subhead">Review all report details below. Download protected PDF report.</p>
                 </div>
                 <button className="modal-close" onClick={() => setPreview(null)}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -142,8 +142,9 @@ export default function PatientReports() {
                   {downloadKey === String(preview.report_id || preview.visit_id || preview.filename || 'active') ? 'Downloading...' : 'Download'}
                 </button>
               </div>
+              </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
         {/* Main content: robust loading, error, empty, and list states */}
         <div className="page-content" style={{ marginTop: 32 }}>
