@@ -20,11 +20,12 @@ export default function AdminUsers() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4000);
   };
 
-  const load = async (p = 1, role = roleF) => {
+  const load = async (p = 1, role = roleF, q = search) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page: p, page_size: 15 });
       if (role) params.append('role', role);
+      if (q?.trim()) params.append('search', q.trim());
       const r = await api.get(`/admin/users?${params}`);
       setUsers(r.data?.users || r.data?.data || []);
       setTotal(r.data?.total || 0);
@@ -32,13 +33,13 @@ export default function AdminUsers() {
     } catch { } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(1); }, []);
+  useEffect(() => { load(1, roleF, ''); }, []);
 
   const updateStatus = async (userId, status) => {
     try {
       await api.put(`/admin/users/${userId}/status`, { status });
       toast('info', 'Updated', `User status changed to ${status}`);
-      load(page, roleF);
+      load(page, roleF, search);
     } catch { toast('warn', 'Error', 'Could not update user status.'); }
   };
 
@@ -49,7 +50,7 @@ export default function AdminUsers() {
       toast('info', 'Created', `User ${form.username} created successfully.`);
       setModal(false);
       setForm({ username: '', email: '', password: '', role: 'patient', full_name: '', date_of_birth: '1990-01-01', gender: 'M' });
-      load(1, roleF);
+      load(1, roleF, search);
     } catch (e) { toast('warn', 'Error', e?.response?.data?.detail || 'Could not create user.'); }
   };
 
@@ -73,10 +74,10 @@ export default function AdminUsers() {
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && load(1)} placeholder="Search name or email…"
+        <input value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && load(1, roleF, search)} placeholder="Search name or email…"
           style={{ padding: '7px 12px', border: '1.5px solid var(--grey-border)', borderRadius: 8, fontSize: 12, background: 'var(--grey-bg)', color: 'var(--dark)', fontFamily: 'inherit', outline: 'none', width: 220 }} />
         {['', 'admin', 'doctor', 'patient'].map(r => (
-          <button key={r} onClick={() => { setRoleF(r); load(1, r); }}
+          <button key={r} onClick={() => { setRoleF(r); load(1, r, search); }}
             style={{ padding: '7px 14px', border: `1.5px solid ${roleF === r ? 'var(--teal)' : 'var(--grey-border)'}`, borderRadius: 8, fontSize: 12, background: roleF === r ? 'var(--teal)' : 'var(--grey-bg)', color: roleF === r ? '#fff' : 'var(--grey-text)', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, transition: 'all .15s' }}>
             {r || 'All Roles'}
           </button>
@@ -116,9 +117,9 @@ export default function AdminUsers() {
         <div style={{ padding: '12px 20px', borderTop: '1px solid var(--grey-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 12, color: 'var(--grey-text)' }}>Page {page} of {totalPages}</span>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button disabled={page <= 1} onClick={() => load(page - 1, roleF)}
+            <button disabled={page <= 1} onClick={() => load(page - 1, roleF, search)}
               style={{ padding: '5px 12px', border: '1.5px solid var(--grey-border)', borderRadius: 6, fontSize: 12, cursor: page <= 1 ? 'not-allowed' : 'pointer', opacity: page <= 1 ? .5 : 1, fontFamily: 'inherit' }}>← Prev</button>
-            <button disabled={page >= totalPages} onClick={() => load(page + 1, roleF)}
+            <button disabled={page >= totalPages} onClick={() => load(page + 1, roleF, search)}
               style={{ padding: '5px 12px', border: '1.5px solid var(--grey-border)', borderRadius: 6, fontSize: 12, cursor: page >= totalPages ? 'not-allowed' : 'pointer', opacity: page >= totalPages ? .5 : 1, fontFamily: 'inherit' }}>Next →</button>
           </div>
         </div>
