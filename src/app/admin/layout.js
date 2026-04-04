@@ -48,6 +48,12 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     const u = getUser();
     if (!u) { router.replace('/auth'); return; }
+    if (u.role !== 'admin') {
+      if (u.role === 'doctor') router.replace('/doctor/dashboard');
+      else if (u.role === 'patient') router.replace('/patients/dashboard');
+      else router.replace('/auth');
+      return;
+    }
     setUser(u);
   }, [router]);
 
