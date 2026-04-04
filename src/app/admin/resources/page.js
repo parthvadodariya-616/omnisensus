@@ -14,11 +14,17 @@ export default function AdminResources() {
   const trendRef = useRef(); const trendChart = useRef(null);
 
   const applyResourceData = (d) => {
-    setBeds(d.beds || []);
-    setBedSum(d.bed_summary || {});
+    const nextBeds = d.beds || [];
+    const nextSummary = d.bed_summary || {};
+    setBeds(nextBeds);
+    setBedSum(nextSummary);
     setEquip(d.equipment || []);
     setOncall(d.oncall || []);
-    const occ = d.bed_summary?.occupancy_pct ?? 0;
+
+    const total = nextSummary.total_beds ?? nextSummary.total ?? nextBeds.length;
+    const occupied = (nextSummary.occupied_beds ?? nextSummary.occupied ?? nextBeds.filter(b => b.status === 'occupied').length)
+      + (nextSummary.icu_beds ?? nextSummary.icu ?? nextBeds.filter(b => b.status === 'icu').length);
+    const occ = nextSummary.occupancy_pct ?? (total > 0 ? Math.round((occupied / total) * 100) : 0);
     if (occ > 85) {
       setAlerts([{ message: `Bed occupancy at ${occ}% - approaching critical capacity`, severity: 'critical' }]);
     } else {
@@ -45,13 +51,21 @@ export default function AdminResources() {
       ? (typeof trendRaw[0] === 'number'
         ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].slice(0, trendRaw.length)
         : trendRaw.map(x => x.label ?? x.day ?? x.period ?? '').filter(Boolean))
-      : [];
+      : ['Current'];
+
+    const totalBeds = bedSum?.total_beds ?? bedSum?.total ?? beds.length;
+    const occupiedNow = (bedSum?.occupied_beds ?? bedSum?.occupied ?? beds.filter(b => b.status === 'occupied').length)
+      + (bedSum?.icu_beds ?? bedSum?.icu ?? beds.filter(b => b.status === 'icu').length);
+    const availableNow = bedSum?.available_beds ?? bedSum?.available ?? beds.filter(b => b.status === 'available').length;
+
     const occupiedData = Array.isArray(trendRaw) && trendRaw.length
       ? (typeof trendRaw[0] === 'number' ? trendRaw : trendRaw.map(x => x.occupied ?? x.occupancy ?? x.value ?? 0))
-      : [];
+      : [occupiedNow];
     const availableData = Array.isArray(trendRaw) && trendRaw.length
       ? (typeof trendRaw[0] === 'number' ? [] : trendRaw.map(x => x.available ?? Math.max(0, (bedSum?.total_beds || 0) - (x.occupied ?? 0))))
-      : [];
+      : [availableNow];
+
+    const yMax = Math.max(5, totalBeds || 0, ...occupiedData, ...availableData) + 1;
 
     const init = () => {
       if (cancelled) return;
@@ -61,7 +75,7 @@ export default function AdminResources() {
         trendChart.current = new C(trendRef.current, {
           type: 'line',
           data: { labels: trendLabels, datasets: [{ label: 'Occupied', data: occupiedData, borderColor: '#E85D6A', backgroundColor: 'rgba(232,93,106,.07)', fill: true, tension: .4, pointRadius: 3 }, { label: 'Available', data: availableData, borderColor: '#10847E', backgroundColor: 'rgba(16,132,126,.07)', fill: true, tension: .4, pointRadius: 3 }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: F, size: 11 } } }, tooltip: { backgroundColor: '#1A2733', titleFont: { family: F }, bodyFont: { family: F }, padding: 10, cornerRadius: 8 } }, scales: { x: { grid: { color: 'rgba(17,24,39,.04)' }, ticks: { color: '#8A9BB0', font: { family: F, size: 10 } }, border: { display: false } }, y: { grid: { color: 'rgba(17,24,39,.04)' }, ticks: { color: '#8A9BB0', font: { family: F, size: 10 } }, border: { display: false } } }, interaction: { mode: 'index', intersect: false } }
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: F, size: 11 } } }, tooltip: { backgroundColor: '#1A2733', titleFont: { family: F }, bodyFont: { family: F }, padding: 10, cornerRadius: 8 } }, scales: { x: { grid: { color: 'rgba(17,24,39,.04)' }, ticks: { color: '#8A9BB0', font: { family: F, size: 10 } }, border: { display: false } }, y: { grid: { color: 'rgba(17,24,39,.04)' }, ticks: { color: '#8A9BB0', font: { family: F, size: 10 } }, border: { display: false }, min: 0, max: yMax } }, interaction: { mode: 'index', intersect: false } }
         });
       }
 
@@ -69,12 +83,13 @@ export default function AdminResources() {
         trendChart.current.data.labels = trendLabels;
         trendChart.current.data.datasets[0].data = occupiedData;
         trendChart.current.data.datasets[1].data = availableData;
+        trendChart.current.options.scales.y.max = yMax;
         trendChart.current.update('none');
       }
     };
     ensureChartLoaded().then(() => { if (!cancelled) init(); }).catch(() => {});
     return () => { cancelled = true; if (trendChart.current) { trendChart.current.destroy(); trendChart.current = null; } };
-  }, [bedSum]);
+  }, [bedSum, beds]);
 
   const getBedColor = (status) => {
     if (status === 'icu') return { bg: '#7C3AED', label: '#fff' };

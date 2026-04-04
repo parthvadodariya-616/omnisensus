@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!patients.length || typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
     let cancelled = false;
     const initCharts = () => {
       if (cancelled) return;
@@ -52,15 +52,35 @@ export default function AdminDashboard() {
       const tickOpts = { color: '#8A9BB0', font: { family: F, size: 10 } };
       const tooltipOpts = { backgroundColor: '#1A2733', titleFont: { family: F, size: 11 }, bodyFont: { family: F, size: 11 }, padding: 10, cornerRadius: 8 };
 
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const weekly = platform.weekly_admissions || platform.admissions_trend || [];
-      const weeklyLabels = Array.isArray(weekly) && weekly.length
-        ? (typeof weekly[0] === 'number'
-          ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].slice(0, weekly.length)
-          : weekly.map(x => x.label ?? x.day ?? x.period ?? '').filter(Boolean))
-        : [];
-      const weeklyData = Array.isArray(weekly) && weekly.length
-        ? (typeof weekly[0] === 'number' ? weekly : weekly.map(x => x.value ?? x.count ?? 0))
-        : [];
+      let weeklyLabels = [];
+      let weeklyData = [];
+
+      if (Array.isArray(weekly) && weekly.length) {
+        weeklyLabels = typeof weekly[0] === 'number'
+          ? days.slice(0, weekly.length)
+          : weekly.map((x, i) => x.label ?? x.day ?? x.period ?? days[i % 7]);
+        weeklyData = typeof weekly[0] === 'number'
+          ? weekly
+          : weekly.map(x => Number(x.value ?? x.count ?? 0) || 0);
+      } else {
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+        const now = Date.now();
+        const dayMs = 24 * 60 * 60 * 1000;
+        patients.forEach((p) => {
+          const ts = p?.last_scan_at ? new Date(p.last_scan_at).getTime() : null;
+          if (!ts || Number.isNaN(ts)) return;
+          const ageDays = Math.floor((now - ts) / dayMs);
+          if (ageDays < 0 || ageDays > 6) return;
+          const idx = 6 - ageDays;
+          counts[idx] += 1;
+        });
+        weeklyLabels = days;
+        weeklyData = counts;
+      }
+
+      const yMax = Math.max(5, ...weeklyData) + 1;
 
       // Volume chart
       if (volRef.current && !volChart.current) {
@@ -70,11 +90,12 @@ export default function AdminDashboard() {
             labels: weeklyLabels,
             datasets: [{ label: 'Admissions', data: weeklyData, backgroundColor: 'rgba(16,132,126,.7)', borderRadius: 6, borderSkipped: false }]
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: tooltipOpts }, scales: { x: { grid: gridOpts, ticks: tickOpts, border: { display: false } }, y: { grid: gridOpts, ticks: tickOpts, border: { display: false } } } }
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: tooltipOpts }, scales: { x: { grid: gridOpts, ticks: tickOpts, border: { display: false } }, y: { grid: gridOpts, ticks: tickOpts, border: { display: false }, min: 0, max: yMax } } }
         });
       } else if (volChart.current) {
         volChart.current.data.labels = weeklyLabels;
         volChart.current.data.datasets[0].data = weeklyData;
+        volChart.current.options.scales.y.max = yMax;
         volChart.current.update('none');
       }
 
