@@ -5,7 +5,14 @@ import api from '@/lib/api';
 
 const TYPE_CLS = { auth: 'audit-tag--auth', data: 'audit-tag--db', system: 'audit-tag--db', security: 'audit-tag--sec', ai: 'audit-tag--ai', api: 'audit-tag--sec' };
 const SEV_CLS  = { info: 'audit-icon--info', warning: 'audit-icon--warn', critical: 'audit-icon--danger' };
-const STATUS_CLS = { success: 'audit-icon--success', failure: 'audit-icon--danger', warning: 'audit-icon--warn', timeout: 'audit-icon--warn' };
+const STATUS_CLS = {
+  success: 'audit-icon--success',
+  failure: 'audit-icon--danger',
+  failed: 'audit-icon--danger',
+  error: 'audit-icon--danger',
+  warning: 'audit-icon--warn',
+  timeout: 'audit-icon--warn',
+};
 
 export default function AdminAudit() {
   const [logs,    setLogs]    = useState([]);
